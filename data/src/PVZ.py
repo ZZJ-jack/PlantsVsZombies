@@ -94,150 +94,169 @@ class Pvz:
             for event in pygame.event.get():  # 获取所有事件
                 if event.type == pygame.QUIT:  # 如果事件类型为退出
                     os._exit(0)
+            if not self.gameover:
+                for event in pygame.event.get():  # 获取所有事件
+                    if pygame.mouse.get_pressed()[0]:  # 如果鼠标左键被按下
+                        if not self.plant:
+                            for card in self.card:  # 遍历卡片
+                                if card.READY:
+                                    if click(card.pos, card.size, pygame.mouse.get_pos()):  # 如果点击卡片
+                                        if self.game.CheckPlant_Grid(card.name):
+                                            self.plant = True
+                                            self.plantType = card.number
+                                            self.plantName = card.name
 
-                elif pygame.mouse.get_pressed()[0]:  # 如果鼠标左键被按下
-                    if not self.plant:
-                        for card in self.card:  # 遍历卡片
-                            if card.READY:
-                                if click(card.pos, card.size, pygame.mouse.get_pos()):  # 如果点击卡片
-                                    if self.game.CheckPlant_Grid(card.name):
-                                        self.plant = True
-                                        self.plantType = card.number
-                                        self.plantName = card.name
+                                            self.Plant.name = self.plantName
+                                            self.Plant.path = settings[self.plantName]['path']
+                                            self.Plant.imageCount = settings[self.plantName]['imageCount']
+                                            self.Plant.size = settings[self.plantName]['size']
+                                            self.Plant.preIndexTimeNumber = settings['game']['plantPreIndexTimeNumber'][self.plantName]
+                                            
+                                            self.gridPlant.plantName = self.plantName
+                                            self.gridPlant.path = settings[self.plantName]['path']
+                                            self.gridPlant.imageCount = settings[self.plantName]['imageCount']
+                                            self.gridPlant.size = settings[self.plantName]['size']
+                                            self.gridPlant.preIndexTimeNumber = settings['game']['plantPreIndexTimeNumber'][self.plantName]
+                                            
+                self.screen.fill(WHITE)  # 填充屏幕为白色
+                self.background.run()  # 运行背景
+                self.game.run()  # 运行游戏核心
 
-                                        self.Plant.name = self.plantName
-                                        self.Plant.path = settings[self.plantName]['path']
-                                        self.Plant.imageCount = settings[self.plantName]['imageCount']
-                                        self.Plant.size = settings[self.plantName]['size']
-                                        self.Plant.preIndexTimeNumber = settings['game']['plantPreIndexTimeNumber'][self.plantName]
-                                        
-                                        self.gridPlant.plantName = self.plantName
-                                        self.gridPlant.path = settings[self.plantName]['path']
-                                        self.gridPlant.imageCount = settings[self.plantName]['imageCount']
-                                        self.gridPlant.size = settings[self.plantName]['size']
-                                        self.gridPlant.preIndexTimeNumber = settings['game']['plantPreIndexTimeNumber'][self.plantName]
-                                        
-            
-            self.screen.fill(WHITE)  # 填充屏幕为白色
-            self.background.run()  # 运行背景
-            self.game.run()  # 运行游戏核心
+                self.CardFrame.run()  # 运行卡片框
+                for card in self.card:
+                    card.run()  # 运行卡片
+                self.game.shovelFrame.run()  # 运行铲子框
 
-            self.CardFrame.run()  # 运行卡片框
-            for card in self.card:
-                card.run()  # 运行卡片
-            self.game.shovelFrame.run()  # 运行铲子框
+                text_surface = pygame.font.Font(None, 33).render(str(self.game.gold), True, (0, 0, 0))
+                # 设置文本表面的位置
+                text_rect = text_surface.get_rect()
+                text_rect.center = (60, 75)
+                # 将文本表面绘制到屏幕上
+                self.screen.blit(text_surface, text_rect)
 
-            text_surface = pygame.font.Font(None, 33).render(str(self.game.gold), True, (0, 0, 0))
-            # 设置文本表面的位置
-            text_rect = text_surface.get_rect()
-            text_rect.center = (60, 75)
-            # 将文本表面绘制到屏幕上
-            self.screen.blit(text_surface, text_rect)
+                if self.plant: # 如果正在种植：种植
+                    if self.game.CheckInGarden(pygame.mouse.get_pos()):
+                        self.gridPlant.run()
+                    if pygame.mouse.get_pressed()[0]:  #如果鼠标左键被按下
+                        if not self.game.CheckAddPlant(pygame.mouse.get_pos(), self.plantType)['plant']: # 如果不能种植
+                            continue # 跳过此次循环
+                        for plant in settings["need_grow_soil_plant"]:
+                            if plant == self.plantName:
+                                self.growSoil_list.append(GrowSoil(self.ObjectGame, self.game.CheckAddPlant(pygame.mouse.get_pos(), self.plantType)['pos'])) #添加生长土壤到生长土壤列表
+                                break
+                        if self.plantType == 1: #如果种植的是阳光花
+                            self.sunflower_list.append(Sunflower(self.ObjectGame, self.game.CheckAddPlant(pygame.mouse.get_pos(), self.plantType)['pos'])) #添加阳光花到阳光花列表
+                            self.plant = False
+                        elif self.plantType == 2: #如果种植的是豌豆射手
+                            self.peashooter_list.append(Peashooter(self.ObjectGame, self.game.CheckAddPlant(pygame.mouse.get_pos(), self.plantType)['pos'])) #添加射手到射手列表
+                            self.plant = False
+                        elif self.plantType == 3: #如果种植的是坚果
+                            self.nut_list.append(Nut(self.ObjectGame, self.game.CheckAddPlant(pygame.mouse.get_pos(), self.plantType)['pos'])) #添加坚果到坚果列表
+                            self.plant = False
+                        elif self.plantType == 4: #如果种植的是土豆地雷
+                            self.potatoMine_list.append(PotatoMine(self.ObjectGame, self.game.CheckAddPlant(pygame.mouse.get_pos(), self.plantType)['pos'])) #添加坚果到坚果列表
+                            self.plant = False
+                        elif self.plantType == 5: #如果种植的是大嘴花
+                            self.chomper_list.append(Chomper(self.ObjectGame, self.game.CheckAddPlant(pygame.mouse.get_pos(), self.plantType)['pos'])) #添加大嘴花到大嘴花列表
+                            self.plant = False
+                        elif self.plantType == 6: #如果种植的是樱桃炸弹
+                            self.cherryBomb_list.append(CherryBomb(self.ObjectGame, self.game.CheckAddPlant(pygame.mouse.get_pos(), self.plantType)['pos'])) #添加樱桃炸弹到樱桃炸弹列表
+                            self.plant = False
+                        elif self.plantType == 7: #如果种植的是火爆辣椒
+                            self.jalapeno_list.append(Jalapeno(self.ObjectGame, self.game.CheckAddPlant(pygame.mouse.get_pos(), self.plantType)['pos']))
+                            self.plant = False
+                        elif self.plantType == 8: #如果种植的是倭瓜
+                            self.squash_list.append(Squash(self.ObjectGame, self.game.CheckAddPlant(pygame.mouse.get_pos(), self.plantType)['pos']))
+                            self.plant = False
+                        self.game.gold -= settings[settings['plant_name'][self.plantType]]['gold'] # 扣除金币
 
-            if self.plant: # 如果正在种植：种植
-                if self.game.CheckInGarden(pygame.mouse.get_pos()):
-                    self.gridPlant.run()
-                if pygame.mouse.get_pressed()[0]:  #如果鼠标左键被按下
-                    if not self.game.CheckAddPlant(pygame.mouse.get_pos(), self.plantType)['plant']: # 如果不能种植
-                        continue # 跳过此次循环
-                    for plant in settings["need_grow_soil_plant"]:
-                        if plant == self.plantName:
-                            self.growSoil_list.append(GrowSoil(self.ObjectGame, self.game.CheckAddPlant(pygame.mouse.get_pos(), self.plantType)['pos'])) #添加生长土壤到生长土壤列表
-                            break
-                    if self.plantType == 1: #如果种植的是阳光花
-                        self.sunflower_list.append(Sunflower(self.ObjectGame, self.game.CheckAddPlant(pygame.mouse.get_pos(), self.plantType)['pos'])) #添加阳光花到阳光花列表
-                        self.plant = False
-                    elif self.plantType == 2: #如果种植的是豌豆射手
-                        self.peashooter_list.append(Peashooter(self.ObjectGame, self.game.CheckAddPlant(pygame.mouse.get_pos(), self.plantType)['pos'])) #添加射手到射手列表
-                        self.plant = False
-                    elif self.plantType == 3: #如果种植的是坚果
-                        self.nut_list.append(Nut(self.ObjectGame, self.game.CheckAddPlant(pygame.mouse.get_pos(), self.plantType)['pos'])) #添加坚果到坚果列表
-                        self.plant = False
-                    elif self.plantType == 4: #如果种植的是土豆地雷
-                        self.potatoMine_list.append(PotatoMine(self.ObjectGame, self.game.CheckAddPlant(pygame.mouse.get_pos(), self.plantType)['pos'])) #添加坚果到坚果列表
-                        self.plant = False
-                    elif self.plantType == 5: #如果种植的是大嘴花
-                        self.chomper_list.append(Chomper(self.ObjectGame, self.game.CheckAddPlant(pygame.mouse.get_pos(), self.plantType)['pos'])) #添加大嘴花到大嘴花列表
-                        self.plant = False
-                    elif self.plantType == 6: #如果种植的是樱桃炸弹
-                        self.cherryBomb_list.append(CherryBomb(self.ObjectGame, self.game.CheckAddPlant(pygame.mouse.get_pos(), self.plantType)['pos'])) #添加樱桃炸弹到樱桃炸弹列表
-                        self.plant = False
-                    elif self.plantType == 7: #如果种植的是火爆辣椒
-                        self.jalapeno_list.append(Jalapeno(self.ObjectGame, self.game.CheckAddPlant(pygame.mouse.get_pos(), self.plantType)['pos']))
-                        self.plant = False
-                    self.game.gold -= settings[settings['plant_name'][self.plantType]]['gold'] # 扣除金币
+                for potatoMine in self.potatoMine_list:  # 遍历土豆地雷列表
+                    if potatoMine.delete:
+                        self.potatoMine_list.remove(potatoMine)
+                        continue
+                    potatoMine.run()
 
-            for potatoMine in self.potatoMine_list:  # 遍历土豆地雷列表
-                if potatoMine.delete:
-                    self.potatoMine_list.remove(potatoMine)
-                    continue
-                potatoMine.run()
+                for peashooter in self.peashooter_list:  # 遍历射手列表
+                    peashooter.run()  # 运行射手
 
-            for peashooter in self.peashooter_list:  # 遍历射手列表
-                peashooter.run()  # 运行射手
+                for sunflower in self.sunflower_list:  # 遍历阳光花列表
+                    sunflower.run()  # 运行阳光花
 
-            for sunflower in self.sunflower_list:  # 遍历阳光花列表
-                sunflower.run()  # 运行阳光花
+                for nut in self.nut_list: # 遍历坚果列表
+                    nut.run() # 运行坚果
+                
+                for squash in self.squash_list:  # 遍历倭瓜列表
+                    squash.run()  # 运行倭瓜
+                
+                for zombie in self.zombie_list:  # 遍历普通僵尸列表
+                    zombie.run()  # 运行僵尸
+                    if zombie.delete:  # 如果僵尸需要被删除
+                        self.zombie_list.remove(zombie)  # 从普通僵尸列表中删除僵尸
 
-            for nut in self.nut_list: # 遍历坚果列表
-                nut.run() # 运行坚果
-            
-            for zombie in self.zombie_list:  # 遍历普通僵尸列表
-                zombie.run()  # 运行僵尸
-                if zombie.delete:  # 如果僵尸需要被删除
-                    self.zombie_list.remove(zombie)  # 从普通僵尸列表中删除僵尸
+                for head in self.zombieHead_list:  # 遍历僵尸头列表
+                    head.run()  # 运行僵尸头
+                    if head.delete:  # 如果僵尸头需要被删除
+                        self.zombieHead_list.remove(head)  # 从僵尸头列表中删除僵尸头
 
-            for head in self.zombieHead_list:  # 遍历僵尸头列表
-                head.run()  # 运行僵尸头
-                if head.delete:  # 如果僵尸头需要被删除
-                    self.zombieHead_list.remove(head)  # 从僵尸头列表中删除僵尸头
+                for chomper in self.chomper_list:  # 遍历大嘴花列表
+                    chomper.run()  # 运行大嘴花
+                
+                for pea in self.pea_list:  # 遍历子弹列表
+                    pea.run()  # 运行子弹
+                    if pea.delete:  # 如果子弹需要被删除
+                        self.pea_list.remove(pea)  # 从子弹列表中删除子弹
 
-            for chomper in self.chomper_list:  # 遍历大嘴花列表
-                chomper.run()  # 运行大嘴花
-            
-            for pea in self.pea_list:  # 遍历子弹列表
-                pea.run()  # 运行子弹
-                if pea.delete:  # 如果子弹需要被删除
-                    self.pea_list.remove(pea)  # 从子弹列表中删除子弹
+                for cherryBomb in self.cherryBomb_list:  # 遍历樱桃炸弹列表
+                    cherryBomb.run()  # 运行樱桃炸弹
 
-            for cherryBomb in self.cherryBomb_list:  # 遍历樱桃炸弹列表
-                cherryBomb.run()  # 运行樱桃炸弹
+                for jalapeno in self.jalapeno_list:  # 遍历火爆辣椒列表
+                    jalapeno.run()  # 运行火爆辣椒
+                
+                for growSoil in self.growSoil_list:  # 遍历生长土壤列表
+                    growSoil.run()  # 运行生长土壤
 
-            for jalapeno in self.jalapeno_list:  # 遍历火爆辣椒列表
-                jalapeno.run()  # 运行火爆辣椒
-            
-            for growSoil in self.growSoil_list:  # 遍历生长土壤列表
-                growSoil.run()  # 运行生长土壤
+                # 遍历卡片阴影列表
+                for shadow in self.card_shadow_list:
+                    # 获取当前阴影在列表中的索引位置
+                    number = self.card_shadow_list.index(shadow)
+                    # 检查卡片是否准备就绪且不能在当前网格种植
+                    if self.card[number].READY and not self.game.CheckPlant_Grid(self.card[number].name):
+                        # 运行阴影效果（显示不可用状态）
+                        shadow.run()
 
-            # 遍历卡片阴影列表
-            for shadow in self.card_shadow_list:
-                # 获取当前阴影在列表中的索引位置
-                number = self.card_shadow_list.index(shadow)
-                # 检查卡片是否准备就绪且不能在当前网格种植
-                if self.card[number].READY and not self.game.CheckPlant_Grid(self.card[number].name):
-                    # 运行阴影效果（显示不可用状态）
-                    shadow.run()
+                for lawnmower in self.lawnmower_list:  # 遍历草地机列表
+                    lawnmower.run()  # 运行草地机
 
-            for lawnmower in self.lawnmower_list:  # 遍历草地机列表
-                lawnmower.run()  # 运行草地机
+                for sunlight in self.sunlight_list:  # 遍历阳光列表
+                    sunlight.run()  # 运行阳光
 
-            for sunlight in self.sunlight_list:  # 遍历阳光列表
-                sunlight.run()  # 运行阳光
+                self.game.shovel.run()  # 运行铲子
+                
+                if self.plant: # 如果正在种植
+                    self.Plant.run()  # 运行种植提示
 
-            self.game.shovel.run()  # 运行铲子
-            
-            if self.plant: # 如果正在种植
-                self.Plant.run()  # 运行种植提示
+                for index in range(1, GRID_COUNT[1]) : # 遍历网格行数
+                    flag = False  # 初始化标志为False
+                    for zombie in self.zombie_list:  # 遍历僵尸列表
+                        if zombie.posY == -1: # 如果僵尸的Y位置为-1
+                            continue # 跳过此次循环
+                        if zombie.grid[1] == index:  # 如果僵尸在当前行
+                            flag = True  # 设置标志为True
+                            break  # 跳出循环
+                    self.zombiePos[index] = flag  # 更新僵尸位置列 是否有僵尸在当前行
 
-            for index in range(1, GRID_COUNT[1]) : # 遍历网格行数
-                flag = False  # 初始化标志为False
-                for zombie in self.zombie_list:  # 遍历僵尸列表
-                    if zombie.posY == -1: # 如果僵尸的Y位置为-1
-                        continue # 跳过此次循环
-                    if zombie.grid[1] == index:  # 如果僵尸在当前行
-                        flag = True  # 设置标志为True
-                        break  # 跳出循环
-                self.zombiePos[index] = flag  # 更新僵尸位置列表
+            elif self.gameover: # 如果游戏结束
+                self.screen.fill(WHITE)  # 填充屏幕为白色
+                self.background.run()  # 运行背景
+                self.game.run()  # 运行游戏核心
+
+                self.CardFrame.run()  # 运行卡片框
+                for card in self.card:
+                    card.run()  # 运行卡片
+                self.game.run()
+                self.game.shovelFrame.run()  # 运行铲子框
+                self.game.shovel.run()  # 运行铲子
+                self.gameover_text.run() # 运行游戏结束文本
 
             self.clock.tick(self.FPS)  # 设置帧率
             pygame.display.flip()  # 更新屏幕
@@ -254,11 +273,13 @@ class Pvz:
         self.cherryBomb_list = []  # 樱桃炸弹列表
         self.jalapeno_list = []  # 火爆辣椒列表
         self.potatoMine_list = []  # 土豆地雷列表
+        self.squash_list = []  # 倭瓜列表
         self.growSoil_list = []  # 生长土壤列表
         self.displayed_card_shadow_list = []  # 选择用卡片阴影列表
         self.card_shadow_list = []  # 卡片阴影列表
         self.zombiePos = [0, 0, 0, 0, 0, 0]  # 僵尸位置列表
         self.lawnmower_list = []  # 草地机列表
+        self.lawnmowerIf = [0, 0, 0, 0, 0, 0]  # 草坪机是否已出现列表
     
     def SetWindowAtTheTop(self): # 设置窗口置顶
         import ctypes
@@ -319,6 +340,9 @@ class Pvz:
         self.card = []  # 卡片实例列表
         self.displayed_card = []  # 显示卡片实例列表
 
+        self.gameover_text = GameOverText(self.screen)  # 创建游戏结束文本实例
+        self.gameover = False  # 设置游戏结束状态
+
         rankY = 1
         number = 1
         for rankX in range(1, len(settings['plant_name'])):  # 遍历卡片列表
@@ -340,7 +364,7 @@ class Pvz:
         self.reallyButton = ReallyButton(self.ObjectGame)  # 创建开始按钮实例
 
         for i in range(GRID_COUNT[1]):  # 遍历草地机列表
-            self.lawnmower_list.append(Lawnmower(self.screen, i + 1))  # 创建草地机实例
+            self.lawnmower_list.append(Lawnmower(self.ObjectGame, i + 1))  # 创建草地机实例
 
     def loading_music(self): # 加载音乐
         # 加载背景音乐
@@ -363,6 +387,9 @@ class Pvz:
 
         self.jalapenoExplosionMusic = pygame.mixer.Sound(settings['jalapeno']['ExplosionSound'])  # 加载火爆辣椒爆炸音效
         self.jalapenoExplosionMusic.set_volume(settings['jalapeno']['ExplosionSoundVolume'])  # 设置音量
+
+        self.lawnmowerMusic = pygame.mixer.Sound(settings['lawnmower']['Music'])  # 加载草地机音乐
+        self.lawnmowerMusic.set_volume(settings['lawnmower']['MusicVolume'])  # 设置音量
 
     def load(self): # 加载游戏数据
         with open('data/save/map.json', 'r') as map:

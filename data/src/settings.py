@@ -4,9 +4,9 @@ from data.src.const import *
 # 定义一个字典，用于存储游戏中各种元素的属性，后续游戏逻辑会依据这些属性运行
 settings = {
     # 植物名称列表，索引 0 位置为空字符串，后续索引对应不同植物名称
-    "plant_name": ["", "sunflower", "peashooter", "nut", "potato_mine", "chomper", "cherry_bomb", "jalapeno", ],
+    "plant_name": ["", "sunflower", "peashooter", "nut", "potato_mine", "chomper", "cherry_bomb", "jalapeno", "squash"],
     # 需要生长土壤的植物
-    "need_grow_soil_plant": ["sunflower", "peashooter", "nut", "potato_mine", "chomper", ],
+    "need_grow_soil_plant": ["sunflower", "peashooter", "nut", "potato_mine", "chomper", "squash"],
     # 植物卡片图片路径列表，索引与 plant_name 列表对应，0 位置为空字符串
     "plant_card_path": ["",
                         "./data/image/PlantCard/Sunflower.png",  # 向日葵卡片图片路径
@@ -15,7 +15,8 @@ settings = {
                         "./data/image/PlantCard/PotatoMine.png", # 土豆地雷卡片图片路径
                         "./data/image/PlantCard/Chomper.png",    # 食人花卡片图片路径
                         "./data/image/PlantCard/CherryBomb.png",  # 樱桃炸弹卡片图片路径
-                        "./data/image/PlantCard/Jalapeno.png", # 火爆辣椒卡片图片路径
+                        "./data/image/PlantCard/Jalapeno.png",  # 火爆辣椒卡片图片路径
+                        "./data/image/PlantCard/Squash.png",    # 倭瓜卡片图片路径
                         ],
     # 游戏相关设置
     "game": {
@@ -47,7 +48,7 @@ settings = {
             "chomper": (4, -8),     # 食人花在网格中的位置偏移
             "cherry_bomb" : (0, 0),   # 樱桃炸弹在网格中的位置偏移
             "jalapeno" : (10, 0),      # 火爆辣椒在网格中的位置偏移
-            "cactus" : (2, 0),      # 仙人掌在网格中的位置偏移
+            "squash" : (-3, -105),        # 倭瓜在网格中的位置偏移
         },
         # 鼠标拖动植物时的位置偏移量
         "mousePlantPos":{
@@ -58,6 +59,7 @@ settings = {
             "chomper": (-45, -50),    # 拖动食人花时的位置偏移
             "cherry_bomb": (-35, -35), # 拖动樱桃炸弹时的位置偏移
             "jalapeno": (-25, -35),    # 拖动火爆辣椒时的位置偏移
+            "squash": (-32, -150),      # 拖动倭瓜时的位置偏移
         },
         # 植物动画帧切换的时间间隔
         "plantPreIndexTimeNumber":{
@@ -68,10 +70,11 @@ settings = {
             "chomper": 0.1,      # 食人花动画帧切换时间间隔
             "cherry_bomb": 0.1,   # 樱桃炸弹动画帧切换时间间隔
             "jalapeno": 0.1,      # 火爆辣椒动画帧切换时间间隔
+            "squash": 0.08,        # 倭瓜动画帧切换时间间隔
         },
         # 植物碰撞检测的 X 轴偏移量
         "detectionPlantXPos": {
-            "lawnmower": 0,     # 草地机碰撞检测 X 轴偏移量
+            "lawnmower": -40,     # 草地机碰撞检测 X 轴偏移量
             "peashooter": -40,    # 豌豆射手碰撞检测 X 轴偏移量
             "sunflower": -40,     # 向日葵碰撞检测 X 轴偏移量
             "nut": -50,           # 坚果碰撞检测 X 轴偏移量
@@ -79,6 +82,7 @@ settings = {
             "chomper": 0,         # 食人花碰撞检测 X 轴偏移量
             "cherry_bomb": 0,     # 樱桃炸弹碰撞检测 X 轴偏移量
             "jalapeno": 0,         # 火爆辣椒碰撞检测 X 轴偏移量
+            "squash": 0,           # 倭瓜碰撞检测 X 轴偏移量
         },
         # 游戏中会出现的僵尸类型集合
         "zombieType": {
@@ -225,6 +229,17 @@ settings = {
         "ExplosionSoundVolume": 0.5,  # 火爆辣椒爆炸音效音量
         "ExplosionPos": (GRID_LEFT_X, -15),  # 火爆辣椒爆炸状态图片位置偏移量
     },
+    # 倭瓜相关属性设置
+    "squash": {
+        "name": "squash",  # 倭瓜名称
+        "gold": 50,           # 种植倭瓜所需金币数量
+        "size": (80, 180),  # 倭瓜显示尺寸
+        "path": "./data/image/Plant/Squash/Squash/(%d).png",  # 倭瓜正常状态图片路径
+        "imageCount": 17,  # 倭瓜正常状态图片数量
+        "AttackPath": "./data/image/Plant/Squash/SquashAttack/(%d).png",  # 倭瓜攻击状态图片路径
+        "AImageCount": 4,  # 倭瓜攻击状态图片数量
+        "collisionSize": (80, 100),  # 倭瓜实际碰撞盒尺寸（扣除透明区域）
+    },
     # 普通僵尸相关属性设置
     "common_zombie": {
         "name": "zombie",  # 普通僵尸名称
@@ -278,10 +293,13 @@ settings = {
     },
     "lawnmower": {
         "name": "lawnmower",  # 草坪机名称
+        "YposChange": 20,  # 草坪机y坐标偏移
         "path": "./data/image/Lawnmower/(%d).svg",  # 草坪机图片路径
         "size": (70, 60),  # 草坪机显示尺寸
         "imageCount": 3,  # 草坪机图片数量
         "collisionSize": (70, 60),  # 草坪机碰撞尺寸
+        "Music": "./data/bgm/Lawnmower.mp3",  # 草坪机音乐文件路径
+        "MusicVolume": 0.5,  # 草坪机音乐音量
     },
     # 阳光相关属性设置
     "sunlight": {
@@ -333,8 +351,9 @@ settings = {
     # 游戏结束界面相关属性设置
     "gameover": {
         "name": "gameover",  # 游戏结束界面名称
-        "path": "./data/image/GameOver.png",  # 游戏结束界面图片路径
-        "size": (1200, 800),  # 游戏结束界面尺寸
+        "path": "./data/image/Other/GameOver.png",  # 游戏结束界面图片路径
+        "size": (800, 600),  # 游戏结束界面尺寸
+        "pos": (200, 0),  # 游戏结束界面位置
     },
     # 游戏开始按钮相关属性设置
     "startButton": {

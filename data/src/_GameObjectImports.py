@@ -25,3 +25,5 @@ from data.src.CherryBomb import * # 导入樱桃炸弹类
 from data.src.Jalapeno import * # 导入火爆辣椒类
 from data.src.GrowSoil import * # 导入生长土壤类
 from data.src.Lawnmower import * # 导入草地机类
+from data.src.Squash import * # 导入倭瓜类
+from data.src.GameOverText import * # 导入游戏结束文本类

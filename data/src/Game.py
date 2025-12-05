@@ -518,9 +518,48 @@ class Game:
                         if not flag:
                             self.game.zombiePos[zombie.posY] = False
         
+        for squash in self.game.squash_list:
+            for zombie in self.game.zombie_list:
+                # 检测倭瓜与僵尸是否发生碰撞
+                if collision_Plant_and_Zombie_detection(squash, zombie, "squash"):
+                    if not zombie.path == settings[zombie.type]["deadPath"]:
+                        if not squash.state == "Attack": # 如果倭瓜未处于攻击状态
+                            squash.state = "Attack" # 切换为攻击状态
+                            squash.imageIndex = 1
+                            squash.imageCount = settings["squash"]["attackImageCount"]
+                            squash.updateImage()
+                            squash.imageIndex = 0
+
+                        if zombie.hp > 40:
+                            # 添加僵尸头对象
+                            self.game.zombieHead_list.append(ZombieHead(self.screen, (zombie.pos[0] + 30, zombie.pos[1])))
+                        zombie.hp = 0
+                        zombie.imageIndex = 0
+                        zombie.path = settings[zombie.type]["deadPath"]
+                        zombie.imageCount = settings[zombie.type]["deadImageCount"]
+                        flag = False
+                        # 检查该僵尸所在行是否还有其他僵尸
+                        for Zombie in self.game.zombie_list:
+                            if zombie.posY == Zombie.posY:
+                                flag = True
+                                break
+                        # 如果该行没有其他僵尸，更新该行僵尸存在标志
+                        if not flag:
+                            self.game.zombiePos[zombie.posY] = False
+
+        for zombie in self.game.zombie_list:
+            if zombie.pos[0] <= GRID_LEFT_X and not self.game.lawnmowerIf[zombie.posY] and not zombie.hp == 0:
+                self.game.gameover = True
+
+        # 处理倭瓜删除事件
+        for squash in self.game.squash_list:
+            if squash.delete:
+                self.game.squash_list.remove(squash)
+        
         # 处理草地机删除事件
         for lawnmower in self.game.lawnmower_list:
             if lawnmower.Delete:
+                self.game.lawnmowerIf[lawnmower.grid[1]] = 0
                 self.game.lawnmower_list.remove(lawnmower)
         
         for cherryBomb in self.game.cherryBomb_list:

@@ -9,7 +9,7 @@ class VersionLogWindow:
     def __init__(self):
         self.root = Tk()
         self.root.title("Pvz版本更新日志")
-        self.root.geometry("650x500")
+        self.root.geometry("800x500")
         self.root.resizable(False, False)
         
         # 设置窗口图标
