@@ -7,7 +7,6 @@ class Main: # 主函数
     def __init__(self):
         # 显示版本更新日志窗口
         self.show_version_log_window()
-        
         self.game = Pvz() # 创建游戏实例
         self.GameSetWindow = GameSet(self.game) # 创建游戏设置窗口
         self.RunGame = threading.Thread(target = self.CreateGameInstance) # 创建多线程:游戏运行窗口

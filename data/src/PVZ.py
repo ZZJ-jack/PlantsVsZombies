@@ -91,12 +91,11 @@ class Pvz:
             self.card_shadow_list.append(Shadow(self.screen, CARD_SIZE, [CARD_FIRST_X + (CARD_SIZE[0] + 7) * self.selectedCard.index(card), CARD_POS_Y]))  # 创建阴影实例
 
         while self.running:  # 当游戏运行时
-            for event in pygame.event.get():  # 获取所有事件
-                if event.type == pygame.QUIT:  # 如果事件类型为退出
-                    os._exit(0)
             if not self.gameover:
                 for event in pygame.event.get():  # 获取所有事件
-                    if pygame.mouse.get_pressed()[0]:  # 如果鼠标左键被按下
+                    if event.type == pygame.QUIT:  # 如果事件类型为退出
+                        os._exit(0)
+                    elif pygame.mouse.get_pressed()[0]:  # 如果鼠标左键被按下
                         if not self.plant:
                             for card in self.card:  # 遍历卡片
                                 if card.READY:
@@ -246,6 +245,10 @@ class Pvz:
                     self.zombiePos[index] = flag  # 更新僵尸位置列 是否有僵尸在当前行
 
             elif self.gameover: # 如果游戏结束
+                for event in pygame.event.get():  # 获取所有事件
+                    if event.type == pygame.QUIT:  # 如果事件类型为退出
+                        os._exit(0)
+                        
                 self.screen.fill(WHITE)  # 填充屏幕为白色
                 self.background.run()  # 运行背景
                 self.game.run()  # 运行游戏核心

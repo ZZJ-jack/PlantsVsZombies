@@ -4,13 +4,18 @@ import re
 from data.src.const import GAME_VERSION, ICON_PATH
 import webbrowser
 import os
+import requests
+from PIL import Image, ImageTk
 
 class VersionLogWindow:
     def __init__(self):
         self.root = Tk()
         self.root.title("Pvz版本更新日志")
-        self.root.geometry("800x500")
+        self.root.geometry("800x600")
         self.root.resizable(False, False)
+        
+        # 设置关闭按钮行为 - 退出整个进程
+        self.root.protocol("WM_DELETE_WINDOW", self.exit_program)
         
         # 设置窗口图标
         if os.path.exists(ICON_PATH):
@@ -22,8 +27,11 @@ class VersionLogWindow:
         self.text_bg = "#F5F5F5"
         self.text_fg = "#333333"
         
-        # 读取README.md文件
-        self.readme_content = self.read_readme()
+        # 网络版本更新日志URL
+        self.version_log_url = "https://raw.gitcode.com/ZZJ-JACK/Pvz/raw/master/README.md"
+        
+        # 读取版本更新日志内容（优先网络，失败则本地）
+        self.readme_content, self.network_status = self.read_version_logs()
         # 解析版本更新日志
         self.version_logs = self.parse_version_logs()
         # 获取最新版本
@@ -32,13 +40,22 @@ class VersionLogWindow:
         self.create_widgets()
         self.display_version_logs()
         
-    def read_readme(self):
-        """读取README.md文件内容"""
+    def read_version_logs(self):
+        """从网络获取版本更新日志，失败则读取本地文件，返回内容和网络状态"""
+        network_status = "success"
         try:
-            with open("./README.md", "r", encoding="utf-8") as f:
-                return f.read()
-        except Exception as e:
-            return f"无法读取README.md文件: {e}"
+            # 尝试从网络获取版本更新日志
+            response = requests.get(self.version_log_url, timeout=10)
+            response.raise_for_status()  # 检查请求是否成功
+            return response.text, network_status
+        except requests.exceptions.RequestException as e:
+            network_status = "failed"
+            # 网络请求失败，尝试读取本地文件
+            try:
+                with open("./README.md", "r", encoding="utf-8") as f:
+                    return f.read(), network_status
+            except Exception as local_e:
+                return f"无法获取版本更新日志\n网络错误: {e}\n本地文件错误: {local_e}", network_status
     
     def parse_version_logs(self):
         """解析版本更新日志"""
@@ -114,9 +131,17 @@ class VersionLogWindow:
                               bg="#E8F5E9", fg="#2E7D32", padx=15, pady=10)
         latest_version.pack(side=LEFT)
         
+        # 内容区域框架 - 左右布局
+        content_frame = Frame(main_frame)
+        content_frame.pack(fill=BOTH, expand=True, pady=(0, 20), padx=10)
+        
+        # 左侧文本区域
+        left_frame = Frame(content_frame)
+        left_frame.pack(side=LEFT, fill=BOTH, expand=True, padx=(0, 15))
+        
         # 滚动文本框
-        text_frame = Frame(main_frame, bd=2, relief=SOLID, bg="#FFFFFF")
-        text_frame.pack(fill=BOTH, expand=True, pady=(0, 20), padx=10)
+        text_frame = Frame(left_frame, bd=2, relief=SOLID, bg="#FFFFFF")
+        text_frame.pack(fill=BOTH, expand=True)
         
         self.text_area = scrolledtext.ScrolledText(text_frame, wrap=WORD, font=(
             "Microsoft YaHei", 10), 
@@ -130,6 +155,50 @@ class VersionLogWindow:
         scrollbar.pack(side=RIGHT, fill=Y)
         self.text_area.config(yscrollcommand=scrollbar.set)
         scrollbar.config(command=self.text_area.yview)
+        
+        # 右侧内容区域 - 赞赏码
+        right_frame = Frame(content_frame, width=220, bg="#FFFFFF", bd=2, relief=GROOVE)
+        right_frame.pack(side=RIGHT, fill=Y, padx=(15, 0), pady=0)
+        right_frame.pack_propagate(False)  # 固定宽度
+        
+        # 内部容器，用于灵活布局
+        right_inner_frame = Frame(right_frame, bg="#FFFFFF")
+        right_inner_frame.pack(fill=BOTH, expand=True, padx=10, pady=10)
+        
+        # 赞赏码标题
+        reward_title = Label(right_inner_frame, text="👍 支持开发者", 
+                            font=(
+                                "Microsoft YaHei", 12, "bold"), fg=self.accent_color, bg="#FFFFFF")
+        reward_title.pack(pady=(0, 10))
+        
+        # 赞赏码提示
+        reward_tip = Label(right_inner_frame, text="请扫描下方赞赏码", 
+                          font=(
+                              "Microsoft YaHei", 10), fg="#666666", bg="#FFFFFF")
+        reward_tip.pack(pady=(0, 15))
+        
+        # 赞赏码图片
+        reward_image_path = "data/image/Other/reward.png"
+        if os.path.exists(reward_image_path):
+            try:
+                # 打开并调整图片大小
+                image = Image.open(reward_image_path)
+                image = image.resize((200, 200), Image.LANCZOS)
+                self.reward_photo = ImageTk.PhotoImage(image)
+                
+                # 创建图片标签
+                reward_label = Label(right_inner_frame, image=self.reward_photo, bg="#FFFFFF")
+                reward_label.pack(pady=0)
+            except Exception as e:
+                error_label = Label(right_inner_frame, text=f"无法加载赞赏码: {e}", 
+                                  font=(
+                                      "Microsoft YaHei", 10), fg="#FF0000", bg="#FFFFFF")
+                error_label.pack(pady=10)
+        else:
+            not_found_label = Label(right_inner_frame, text="赞赏码图片未找到", 
+                                  font=(
+                                      "Microsoft YaHei", 10), fg="#FF0000", bg="#FFFFFF")
+            not_found_label.pack(pady=10)
         
         # 更新提示和按钮框架
         bottom_frame = Frame(main_frame)
@@ -151,17 +220,17 @@ class VersionLogWindow:
                                        style="Accent.TButton")
             download_button.pack(side=LEFT, padx=(0, 15))
             
-            # 关闭按钮
-            close_button = ttk.Button(button_container, text="关闭", command=self.root.destroy, 
+            # 开始游戏按钮
+            start_button = ttk.Button(button_container, text="开始游戏", command=self.root.destroy, 
                                     style="Normal.TButton")
-            close_button.pack(side=LEFT)
+            start_button.pack(side=LEFT)
         else:
-            # 仅显示关闭按钮，居中对齐
+            # 仅显示开始游戏按钮，居中对齐
             button_container = Frame(bottom_frame)
             button_container.pack(side=RIGHT)
-            close_button = ttk.Button(button_container, text="关闭", command=self.root.destroy, 
+            start_button = ttk.Button(button_container, text="开始游戏", command=self.root.destroy, 
                                     style="Normal.TButton")
-            close_button.pack()
+            start_button.pack()
         
         # 创建自定义样式
         self.create_styles()
@@ -187,60 +256,62 @@ class VersionLogWindow:
                        bordercolor=self.text_bg, arrowcolor=self.theme_color)
     
     def display_version_logs(self):
-        """显示版本更新日志"""
+        """显示完整版本更新日志内容"""
         self.text_area.config(state=NORMAL)
         self.text_area.delete(1.0, END)
         
         # 配置文本标签样式
-        self.text_area.tag_config("section_heading", font=("Microsoft YaHei", 12, "bold"), foreground=self.theme_color)
-        self.text_area.tag_config("version_header", font=(
-            "Microsoft YaHei", 11, "bold"), foreground="#1976D2")
-        self.text_area.tag_config("version_number", font=(
-            "Microsoft YaHei", 10, "bold"), foreground="#FF5722")
-        self.text_area.tag_config("version_date", font=(
+        self.text_area.tag_config("network_status", font=(
+            "Microsoft YaHei", 12, "bold"), foreground=self.accent_color)
+        self.text_area.tag_config("version_entry", font=(
+            "Microsoft YaHei", 11, "bold"), foreground="#FF5722")
+        self.text_area.tag_config("date", font=(
             "Microsoft YaHei", 10, "italic"), foreground="#666666")
-        self.text_area.tag_config("version_content", font=(
+        self.text_area.tag_config("description", font=(
             "Microsoft YaHei", 10), foreground=self.text_fg)
-        self.text_area.tag_config("highlight", font=(
-            "Microsoft YaHei", 10, "bold"), foreground=self.accent_color)
+        self.text_area.tag_config("error", font=(
+            "Microsoft YaHei", 10), foreground="#FF0000")
         
-        # 显示当前版本更新日志
-        if GAME_VERSION in self.version_logs:
-            log = self.version_logs[GAME_VERSION]
-            self.text_area.insert(END, "当前版本更新日志\n", "section_heading")
-            self.text_area.insert(END, "- " * 40 + "\n")
-            self.text_area.insert(END, "版本: ", "version_header")
-            self.text_area.insert(END, f"{GAME_VERSION}  ", "version_number")
-            self.text_area.insert(END, f"({log['date']})\n", "version_date")
-            self.text_area.insert(END, "更新内容:\n", "version_header")
-            self.text_area.insert(END, f"  • {log['description']}\n\n", "version_content")
+        # 显示网络状态
+        if self.network_status == "success":
+            self.text_area.insert(END, "✅ 网络连接成功！获取到最新版本更新日志\n", "network_status")
+        else:
+            self.text_area.insert(END, "⚠️ 网络连接失败！显示本地缓存版本更新日志\n", "network_status")
+            self.text_area.insert(END, "   注意：必须使用中国大陆内网才能获取最新版本信息\n", "network_status")
+        self.text_area.insert(END, "- " * 42 + "\n\n")
         
-        # 显示最新版本更新日志
-        if self.latest_version != GAME_VERSION and self.latest_version in self.version_logs:
-            log = self.version_logs[self.latest_version]
-            self.text_area.insert(END, "最新版本更新日志\n", "section_heading")
-            self.text_area.insert(END, "- " * 40 + "\n")
-            self.text_area.insert(END, "版本: ", "version_header")
-            self.text_area.insert(END, f"{self.latest_version}  ", "highlight")
-            self.text_area.insert(END, f"({log['date']})\n", "version_date")
-            self.text_area.insert(END, "更新内容:\n", "version_header")
-            self.text_area.insert(END, f"  • {log['description']}\n\n", "version_content")
-        
-        # 显示所有版本更新日志
-        self.text_area.insert(END, "所有版本更新日志\n", "section_heading")
-        self.text_area.insert(END, "- " * 40 + "\n")
-        for version in sorted(self.version_logs.keys(), key=lambda v: tuple(map(int, v.split('.'))), reverse=True):
-            log = self.version_logs[version]
-            self.text_area.insert(END, "  • ", "version_header")
-            self.text_area.insert(END, f"{version}  ", "version_number")
-            self.text_area.insert(END, f"({log['date']}) ", "version_date")
-            self.text_area.insert(END, f"- {log['description']}\n", "version_content")
+        # 检查是否有错误信息
+        if "无法获取版本更新日志" in self.readme_content:
+            self.text_area.insert(END, self.readme_content + "\n", "error")
+        else:
+            # 按版本号降序显示版本更新日志
+            versions = list(self.version_logs.keys())
+            versions.sort(key=lambda v: tuple(map(int, v.split('.'))), reverse=True)
+            
+            for version in versions:
+                log = self.version_logs[version]
+                date = log["date"]
+                description = log["description"]
+                
+                # 显示版本和日期
+                self.text_area.insert(END, f"{version}  ", "version_entry")
+                self.text_area.insert(END, f"({date})\n", "date")
+                
+                # 显示更新描述
+                self.text_area.insert(END, f"  {description}\n", "description")
+                self.text_area.insert(END, "\n")
         
         self.text_area.config(state=DISABLED)
     
     def open_download_url(self):
         """打开下载链接"""
         webbrowser.open("http://pvz.zzjjack.us.kg")
+    
+    def exit_program(self):
+        """退出整个进程"""
+        self.root.destroy()
+        import sys
+        sys.exit()
     
     def show(self):
         """显示窗口"""
