@@ -3,3 +3,5 @@ V2.4.7-Portable:https://gitcode.com/ZZJ-JACK/Pvz/releases/download/V2.4.7/Pvz-V2
 V2.4.7-Setup:https://gitcode.com/ZZJ-JACK/Pvz/releases/download/V2.4.7/Pvz-V2.4.7-Setup.exe
 V2.4.8-Setup:https://gitcode.com/ZZJ-JACK/Pvz/releases/download/V2.4.8/Pvz-V2.4.8-Setup.exe
 V2.5.0-Setup:https://gitcode.com/ZZJ-JACK/Pvz/releases/download/V2.5.0/Pvz-V2.5.0-Setup.exe
+V2.5.1-Setup:https://gitcode.com/ZZJ-JACK/Pvz/releases/download/V2.5.1/Pvz-V2.5.1-Setup.exe
+V2.5.2-Setup:https://gitcode.com/ZZJ-JACK/Pvz/releases/download/V2.5.2/Pvz-V2.5.2-Setup.exe

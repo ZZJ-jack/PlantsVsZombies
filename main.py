@@ -1,6 +1,7 @@
 from data.src.PVZ import *  # 导入游戏类
 from data.src.GameSet import *  # 导入游戏设置窗口类
 from data.src.versionLogWindow import VersionLogWindow  # 导入版本更新日志窗口类
+from data.src.error_handler import *  # 导入全局异常处理器
 import threading # 导入多线程
 
 class Main: # 主函数
@@ -9,8 +10,8 @@ class Main: # 主函数
         self.show_version_log_window()
         self.game = Pvz() # 创建游戏实例
         self.GameSetWindow = GameSet(self.game) # 创建游戏设置窗口
-        self.RunGame = threading.Thread(target = self.CreateGameInstance) # 创建多线程:游戏运行窗口
-        self.RunGameSetWindow = threading.Thread(target = self.CreateGameSet) # 创建多线程:游戏设置窗口
+        self.RunGame = threading.Thread(target = self.CreateGameInstance, name = "游戏主线程") # 创建多线程:游戏运行窗口
+        self.RunGameSetWindow = threading.Thread(target = self.CreateGameSet, name = "游戏设置线程") # 创建多线程:游戏设置窗口
     
     def show_version_log_window(self):
         """显示版本更新日志窗口"""
@@ -37,6 +38,8 @@ class Main: # 主函数
         pass
 
 if __name__ == '__main__': # 如果是主程序
+    install_error_handler()  # 安装全局异常处理器，捕获所有未处理的异常
     main = Main() # 创建主函数
+    register_game_instances(main.game, main.GameSetWindow)  # 注册游戏实例，用于报错时自动关闭
     main.game.main = main  # 保存主函数实例
     main.run() # 运行主函数
